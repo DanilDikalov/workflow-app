@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 
 # הגדרת עיצוב בסיסי לאפליקציה
-st.set_page_config(page_title="D.D Security Solutions", page_icon="⏰", layout="centered")
+st.set_page_config(page_title="Gs1 שעון נוכחות", page_icon="⏰", layout="centered")
 
 # --- קוד ליישור המערכת לימין (עברית) ---
 st.markdown("""
