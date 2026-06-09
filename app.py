@@ -4,7 +4,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pandas as pd
 
-# הגדרת עיצוב בסיסי לאפליקציה (כותרת מעודכנת)
+# הגדרת עיצוב בסיסי לאפליקציה
 st.set_page_config(page_title="GS1 Security", page_icon="⏰", layout="centered")
 
 # --- קוד ליישור המערכת לימין (עברית) ---
@@ -52,7 +52,9 @@ menu = ["תצוגת עובד", "תצוגת מנהל"]
 choice = st.sidebar.selectbox("ניווט במערכת", menu)
 
 if choice == "תצוגת עובד":
-    st.title("⏰ מערכת החתמת שעות")
+    # --- כותרת ממורכזת ---
+    st.markdown("<h1 style='text-align: center;'>⏰ מערכת החתמת שעות</h1>", unsafe_allow_html=True)
+    
     today = datetime.now().strftime("%d/%m/%Y")
     st.info(f"📅 תאריך דיווח: {today}")
     
@@ -65,20 +67,22 @@ if choice == "תצוגת עובד":
         
         col1, col2 = st.columns(2)
         
+        # יצירת מקום ריק ושמור להודעות (יופיע בדיוק מתחת לכפתורים)
+        msg_area = st.empty()
+        
         with col1:
             if st.button("החתם כניסה 🟢", use_container_width=True):
                 if not name or not emp_id:
-                    st.error("חובה למלא שם ומספר עובד!")
+                    msg_area.error("חובה למלא שם ומספר עובד!")
                 elif sheet:
                     now_time = datetime.now().strftime("%H:%M")
                     sheet.append_row([today, name, emp_id, now_time, "", ""])
-                    # הודעה קופצת במקום בלוק שתופס מקום
-                    st.toast(f"נרשמה כניסה בשעה {now_time}! 🟢") 
+                    msg_area.success(f"נרשמה כניסה בשעה {now_time}! 🟢") 
 
         with col2:
             if st.button("החתם יציאה 🔴", use_container_width=True):
                 if not name or not emp_id:
-                    st.error("חובה למלא שם ומספר עובד!")
+                    msg_area.error("חובה למלא שם ומספר עובד!")
                 elif sheet:
                     now_time = datetime.now().strftime("%H:%M")
                     records = sheet.get_all_records()
@@ -98,17 +102,17 @@ if choice == "תצוגת עובד":
                             tdelta = datetime.strptime(now_time, fmt) - datetime.strptime(in_time_str, fmt)
                             total_hours = round(tdelta.total_seconds() / 3600, 2)
                             sheet.update_cell(found_row_idx, 6, total_hours)
-                            st.toast(f"נרשמה יציאה בשעה {now_time}! 🔴")
-                            # שדרוג: הצגת השעות במספר ענק ובולט
+                            msg_area.success(f"נרשמה יציאה בשעה {now_time}! 🔴")
                             st.metric(label="סה״כ שעות משמרת", value=f"{total_hours} שעות")
                         except:
-                            st.toast(f"נרשמה יציאה בשעה {now_time}! 🔴")
+                            msg_area.success(f"נרשמה יציאה בשעה {now_time}! 🔴")
                     else:
                         sheet.append_row([today, name, emp_id, "", now_time, ""])
-                        st.warning(f"נרשמה יציאה בשעה {now_time} (לא נמצאה כניסה תואמת להיום).")
+                        msg_area.warning(f"נרשמה יציאה בשעה {now_time} (לא נמצאה כניסה תואמת להיום).")
 
 elif choice == "תצוגת מנהל":
-    st.title("🔒 פאנל ניהול ומעקב")
+    # --- כותרת ממורכזת ---
+    st.markdown("<h1 style='text-align: center;'>🔒 פאנל ניהול ומעקב</h1>", unsafe_allow_html=True)
     st.write("---")
     
     password = st.text_input("הכנס סיסמת מנהל", type="password")
