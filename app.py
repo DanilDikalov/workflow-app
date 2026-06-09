@@ -6,6 +6,22 @@ import pandas as pd
 
 # הגדרת עיצוב בסיסי לאפליקציה
 st.set_page_config(page_title="WorkFlow 1.0", page_icon="⏰", layout="centered")
+st.markdown("""
+    <style>
+    /* הופך את כל האפליקציה לימין-לשמאל */
+    .stApp {
+        direction: rtl;
+    }
+    /* מוודא שהטקסט בתיבות ההזנה יישאר מיושר לימין */
+    div[data-testid="stTextInput"] label {
+        text-align: right;
+        display: block;
+    }
+    input {
+        text-align: right;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # פונקציה לחיבור מאובטח ל-Google Sheets
 def get_sheet():
