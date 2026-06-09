@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 
 # הגדרת עיצוב בסיסי לאפליקציה
-st.set_page_config(page_title="GS1 Security", page_icon="⏰", layout="centered")
+st.set_page_config(page_title="D.D Security Solutions", page_icon="⏰", layout="centered")
 
 # --- קוד ליישור המערכת לימין (עברית) ---
 st.markdown("""
@@ -28,7 +28,19 @@ st.sidebar.image("logo.jpg", use_container_width=True)
 
 # פונקציה לחיבור מאובטח ל-Google Sheets
 def get_sheet():
-# ... (מכאן והלאה השאר את שאר הקוד שלך בדיוק כפי שהוא)
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    try:
+        if "gcp_service_account" in st.secrets:
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
+        else:
+            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        
+        client = gspread.authorize(creds)
+        return client.open('Attendance_Data').sheet1
+    except Exception as e:
+        st.error(f"שגיאה בחיבור ל-Google Sheets: {e}")
+        return None
+
 sheet = get_sheet()
 
 # תפריט ניווט צדדי
@@ -53,7 +65,6 @@ if choice == "תצוגת עובד":
                 st.error("חובה למלא שם ומספר עובד!")
             elif sheet:
                 now_time = datetime.now().strftime("%H:%M")
-                # עמודות: תאריך, שם, מספר עובד, כניסה, יציאה, סה"כ
                 sheet.append_row([today, name, emp_id, now_time, "", ""])
                 st.success(f"נרשמה כניסה בשעה {now_time}!")
 
@@ -65,18 +76,15 @@ if choice == "תצוגת עובד":
                 now_time = datetime.now().strftime("%H:%M")
                 records = sheet.get_all_records()
                 
-                # חיפוש דיווח כניסה פתוח מהיום עבור העובד הזה
                 found_row_idx = -1
                 for idx, row in enumerate(records):
                     if str(row.get('מספר עובד')) == str(emp_id) and row.get('תאריך') == today and not row.get('שעת יציאה'):
-                        found_row_idx = idx + 2  # +2 כי gspread מבוסס 1 והשורה הראשונה היא כותרת
+                        found_row_idx = idx + 2
                         break
                 
                 if found_row_idx != -1:
-                    # עדכון שעת יציאה בגיליון
                     sheet.update_cell(found_row_idx, 5, now_time)
                     
-                    # חישוב שעות אוטומטי
                     in_time_str = records[found_row_idx - 2]['שעת כניסה']
                     try:
                         fmt = "%H:%M"
@@ -87,7 +95,6 @@ if choice == "תצוגת עובד":
                     except:
                         st.success(f"נרשמה יציאה בשעה {now_time}.")
                 else:
-                    # אם לא נמצאה כניסה תואמת, פשוט רושמים שורת יציאה
                     sheet.append_row([today, name, emp_id, "", now_time, ""])
                     st.warning(f"נרשמה יציאה בשעה {now_time} (לא נמצאה כניסה תואמת להיום).")
 
@@ -106,7 +113,6 @@ elif choice == "תצוגת מנהל":
                 st.subheader("נתוני נוכחות עובדים")
                 st.dataframe(df, use_container_width=True)
                 
-                # כפתור הורדה ישירה לאקסל (CSV)
                 csv = df.to_csv(index=False, encoding='utf-8-sig')
                 st.download_button(
                     label="📥 הורד דוח באקסל (CSV)",
