@@ -5,14 +5,14 @@ from datetime import datetime
 import pandas as pd
 
 # הגדרת עיצוב בסיסי לאפליקציה
-st.set_page_config(page_title="WorkFlow 1.0", page_icon="⏰", layout="centered")
+st.set_page_config(page_title="GS1 Security", page_icon="⏰", layout="centered")
+
+# --- קוד ליישור המערכת לימין (עברית) ---
 st.markdown("""
     <style>
-    /* הופך את כל האפליקציה לימין-לשמאל */
     .stApp {
         direction: rtl;
     }
-    /* מוודא שהטקסט בתיבות ההזנה יישאר מיושר לימין */
     div[data-testid="stTextInput"] label {
         text-align: right;
         display: block;
@@ -23,23 +23,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- הוספת הלוגו לתפריט הצד ---
+st.sidebar.image("logo.jpg", use_container_width=True)
+
 # פונקציה לחיבור מאובטח ל-Google Sheets
 def get_sheet():
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    try:
-        # בדיקה האם האפליקציה רצה בענן (Streamlit Secrets) או מקומית במחשב
-        if "gcp_service_account" in st.secrets:
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
-        else:
-            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
-        
-        client = gspread.authorize(creds)
-        # ודא ששם הגיליון כאן תואם בדיוק לשם הגיליון שפתחת בשלב 1
-        return client.open('Attendance_Data').sheet1
-    except Exception as e:
-        st.error(f"שגיאה בחיבור ל-Google Sheets: {e}")
-        return None
-
+# ... (מכאן והלאה השאר את שאר הקוד שלך בדיוק כפי שהוא)
 sheet = get_sheet()
 
 # תפריט ניווט צדדי
