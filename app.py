@@ -4,8 +4,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pandas as pd
 
-# הגדרת עיצוב בסיסי לאפליקציה
-st.set_page_config(page_title="Gs1 שעון נוכחות", page_icon="⏰", layout="centered")
+# הגדרת עיצוב בסיסי לאפליקציה (כותרת מעודכנת)
+st.set_page_config(page_title="GS1 Security", page_icon="⏰", layout="centered")
 
 # --- קוד ליישור המערכת לימין (עברית) ---
 st.markdown("""
@@ -19,6 +19,10 @@ st.markdown("""
     }
     input {
         text-align: right;
+    }
+    /* עיצוב למספרים הגדולים (Metrics) שייראו טוב בעברית */
+    div[data-testid="stMetricValue"] {
+        direction: rtl;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -48,55 +52,60 @@ menu = ["תצוגת עובד", "תצוגת מנהל"]
 choice = st.sidebar.selectbox("ניווט במערכת", menu)
 
 if choice == "תצוגת עובד":
-    st.title("⏰ מערכת החתמת שעות - עובד")
-    st.write("---")
-    
-    name = st.text_input("שם ושם משפחה")
-    emp_id = st.text_input("מספר עובד")
+    st.title("⏰ מערכת החתמת שעות")
     today = datetime.now().strftime("%d/%m/%Y")
-    
     st.info(f"📅 תאריך דיווח: {today}")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("החתם כניסה 🟢", use_container_width=True):
-            if not name or not emp_id:
-                st.error("חובה למלא שם ומספר עובד!")
-            elif sheet:
-                now_time = datetime.now().strftime("%H:%M")
-                sheet.append_row([today, name, emp_id, now_time, "", ""])
-                st.success(f"נרשמה כניסה בשעה {now_time}!")
+    # --- תחילת אזור המסגרת (Card) לטופס ---
+    with st.container(border=True):
+        name = st.text_input("שם ושם משפחה")
+        emp_id = st.text_input("מספר עובד")
+        
+        st.write("") # מרווח קטן לעיצוב נקי
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("החתם כניסה 🟢", use_container_width=True):
+                if not name or not emp_id:
+                    st.error("חובה למלא שם ומספר עובד!")
+                elif sheet:
+                    now_time = datetime.now().strftime("%H:%M")
+                    sheet.append_row([today, name, emp_id, now_time, "", ""])
+                    # הודעה קופצת במקום בלוק שתופס מקום
+                    st.toast(f"נרשמה כניסה בשעה {now_time}! 🟢") 
 
-    with col2:
-        if st.button("החתם יציאה 🔴", use_container_width=True):
-            if not name or not emp_id:
-                st.error("חובה למלא שם ומספר עובד!")
-            elif sheet:
-                now_time = datetime.now().strftime("%H:%M")
-                records = sheet.get_all_records()
-                
-                found_row_idx = -1
-                for idx, row in enumerate(records):
-                    if str(row.get('מספר עובד')) == str(emp_id) and row.get('תאריך') == today and not row.get('שעת יציאה'):
-                        found_row_idx = idx + 2
-                        break
-                
-                if found_row_idx != -1:
-                    sheet.update_cell(found_row_idx, 5, now_time)
+        with col2:
+            if st.button("החתם יציאה 🔴", use_container_width=True):
+                if not name or not emp_id:
+                    st.error("חובה למלא שם ומספר עובד!")
+                elif sheet:
+                    now_time = datetime.now().strftime("%H:%M")
+                    records = sheet.get_all_records()
                     
-                    in_time_str = records[found_row_idx - 2]['שעת כניסה']
-                    try:
-                        fmt = "%H:%M"
-                        tdelta = datetime.strptime(now_time, fmt) - datetime.strptime(in_time_str, fmt)
-                        total_hours = round(tdelta.total_seconds() / 3600, 2)
-                        sheet.update_cell(found_row_idx, 6, total_hours)
-                        st.success(f"נרשמה יציאה בשעה {now_time}. סה\"כ שעות: {total_hours}")
-                    except:
-                        st.success(f"נרשמה יציאה בשעה {now_time}.")
-                else:
-                    sheet.append_row([today, name, emp_id, "", now_time, ""])
-                    st.warning(f"נרשמה יציאה בשעה {now_time} (לא נמצאה כניסה תואמת להיום).")
+                    found_row_idx = -1
+                    for idx, row in enumerate(records):
+                        if str(row.get('מספר עובד')) == str(emp_id) and row.get('תאריך') == today and not row.get('שעת יציאה'):
+                            found_row_idx = idx + 2
+                            break
+                    
+                    if found_row_idx != -1:
+                        sheet.update_cell(found_row_idx, 5, now_time)
+                        
+                        in_time_str = records[found_row_idx - 2]['שעת כניסה']
+                        try:
+                            fmt = "%H:%M"
+                            tdelta = datetime.strptime(now_time, fmt) - datetime.strptime(in_time_str, fmt)
+                            total_hours = round(tdelta.total_seconds() / 3600, 2)
+                            sheet.update_cell(found_row_idx, 6, total_hours)
+                            st.toast(f"נרשמה יציאה בשעה {now_time}! 🔴")
+                            # שדרוג: הצגת השעות במספר ענק ובולט
+                            st.metric(label="סה״כ שעות משמרת", value=f"{total_hours} שעות")
+                        except:
+                            st.toast(f"נרשמה יציאה בשעה {now_time}! 🔴")
+                    else:
+                        sheet.append_row([today, name, emp_id, "", now_time, ""])
+                        st.warning(f"נרשמה יציאה בשעה {now_time} (לא נמצאה כניסה תואמת להיום).")
 
 elif choice == "תצוגת מנהל":
     st.title("🔒 פאנל ניהול ומעקב")
